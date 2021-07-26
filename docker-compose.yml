@@ -1,0 +1,49 @@
+version: '3'
+services:
+  nginx:
+    container_name: nginx
+    build:
+      context: .docker/nginx
+      dockerfile: Dockerfile
+    ports:
+      - 80:80
+    depends_on:
+      - app
+
+  app:
+    container_name: app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      TZ: 'Asia/Tokyo'
+      RAILS_ENV: 'development'
+      DATABASE_HOST: 'db'
+      DATABASE_NAME: 'app_development'
+      DATABASE_USER: 'docker'
+      DATABASE_PASSWORD: 'docker'
+    volumes:
+      - .:/app
+    expose:
+      - 3000
+    tty: true
+    stdin_open: true
+    depends_on:
+      - db
+
+  db:
+    image: postgres:12-alpine
+    container_name: db
+    environment:
+      TZ: 'Asia/Tokyo'
+      POSTGRES_USER: 'docker'
+      POSTGRES_PASSWORD: 'docker'
+      POSTGRES_DB: 'app_development'
+    volumes:
+      - database:/var/lib/postgresql/data
+      - ./.docker/db/sql:/docker-entrypoint-initdb.d
+    ports:
+      - 5432:5432
+
+volumes:
+  database:
